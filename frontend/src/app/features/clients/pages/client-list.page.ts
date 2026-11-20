@@ -2,9 +2,9 @@ import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { Confirmation, ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmDialog, ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
@@ -12,6 +12,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { Subject, catchError, debounceTime, filter, map, of, switchMap, tap } from 'rxjs';
+import { csvFileNameFromContentDisposition, downloadBlob } from '../../../core/http/file-download';
 import { isServiceUnreachable, readValidationProblem } from '../../../core/http/http-errors';
 import { ClientsApiService } from '../../../core/services/clients-api.service';
 import { ClientAddressesPanelComponent } from '../components/client-addresses-panel.component';
@@ -31,6 +32,7 @@ import {
 const searchDebounceMilliseconds = 300;
 const maximumSearchLength = 100;
 const defaultPageSize = 20;
+const defaultExportFileName = 'clients-addresses.csv';
 const clientFormFields: ClientFormField[] = ['firstName', 'lastName', 'gender', 'dateOfBirth'];
 
 interface ClientLoadResult {
@@ -64,6 +66,7 @@ export class ClientListPage {
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
+  private settledConfirmation: Confirmation | null = null;
   private readonly searchInputs = new Subject<string>();
   private readonly queryRequests = new Subject<ClientListQuery>();
   private readonly formHasUnsavedChanges = signal(false);
@@ -86,6 +89,7 @@ export class ClientListPage {
   protected readonly deletingClientId = signal<number | null>(null);
   protected readonly addressClient = signal<Client | null>(null);
   protected readonly contactClient = signal<Client | null>(null);
+  protected readonly exporting = signal(false);
 
   protected readonly dialogTitle = computed(() => (this.editingClient() ? 'Edit Client' : 'Add Client'));
 
@@ -190,6 +194,42 @@ export class ClientListPage {
     });
   }
 
+  protected settleConfirmation(confirmDialog: ConfirmDialog, accepted: boolean): void {
+    const confirmation = confirmDialog.confirmation;
+
+    if (!confirmation || confirmation === this.settledConfirmation) {
+      return;
+    }
+
+    this.settledConfirmation = confirmation;
+
+    if (accepted) {
+      confirmDialog.onAccept();
+    } else {
+      confirmDialog.onReject();
+    }
+  }
+
+  protected confirmationIcon(icon: string | undefined): string | undefined {
+    return icon && icon !== 'none' ? icon : undefined;
+  }
+
+  protected exportClients(): void {
+    if (this.exporting()) {
+      return;
+    }
+
+    this.exporting.set(true);
+
+    this.clientsApi
+      .exportClients()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: response => this.completeExport(response.body, response.headers.get('Content-Disposition')),
+        error: (error: unknown) => this.failExport(error)
+      });
+  }
+
   protected openAddresses(client: Client): void {
     this.contactClient.set(null);
     this.addressClient.set(client);
@@ -216,6 +256,30 @@ export class ClientListPage {
   protected onAddressClientMissing(): void {
     this.closeAddresses();
     this.reportMissingClient();
+  }
+
+  private completeExport(csv: Blob | null, contentDisposition: string | null): void {
+    this.exporting.set(false);
+
+    if (!csv) {
+      this.messageService.add({ severity: 'error', summary: 'Client export failed. Please try again.' });
+      return;
+    }
+
+    try {
+      downloadBlob(this.document, csv, csvFileNameFromContentDisposition(contentDisposition, defaultExportFileName));
+      this.messageService.add({ severity: 'success', summary: 'Client export downloaded successfully.' });
+    } catch {
+      this.messageService.add({ severity: 'error', summary: 'Client export failed. Please try again.' });
+    }
+  }
+
+  private failExport(error: unknown): void {
+    this.exporting.set(false);
+    this.messageService.add({
+      severity: 'error',
+      summary: isServiceUnreachable(error) ? 'Unable to connect to the server. Please try again.' : 'Client export failed. Please try again.'
+    });
   }
 
   private reportMissingClient(): void {

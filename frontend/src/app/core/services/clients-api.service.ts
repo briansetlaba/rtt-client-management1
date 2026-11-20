@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Client, ClientListQuery, ClientSaveRequest, PagedResponse } from '../../features/clients/models/client.model';
@@ -29,5 +29,9 @@ export class ClientsApiService {
 
   deleteClient(clientId: number): Observable<void> {
     return this.http.delete<void>(`${clientsUrl}/${clientId}`);
+  }
+
+  exportClients(): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${clientsUrl}/export`, { responseType: 'blob', observe: 'response' });
   }
 }

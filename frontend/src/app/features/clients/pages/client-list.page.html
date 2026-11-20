@@ -4,7 +4,19 @@
       <h1 id="clients-heading" class="page-title">Clients</h1>
       <p class="page-description">Manage and search client records.</p>
     </div>
-    <p-button label="Add Client" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+    <div class="flex flex-wrap gap-2">
+      <p-button
+        label="Export CSV"
+        icon="pi pi-download"
+        severity="secondary"
+        [outlined]="true"
+        [loading]="exporting()"
+        [disabled]="exporting()"
+        [ariaLabel]="exporting() ? 'Exporting clients to CSV' : 'Export CSV'"
+        (onClick)="exportClients()"
+      />
+      <p-button label="Add Client" icon="pi pi-plus" (onClick)="openCreateDialog()" />
+    </div>
   </header>
 
   <div class="content-panel flex flex-column gap-3">
@@ -86,5 +98,25 @@
 <app-client-addresses-panel [client]="addressClient()" (closed)="closeAddresses()" (clientMissing)="onAddressClientMissing()" />
 <app-client-contacts-panel [client]="contactClient()" (closed)="closeContacts()" (clientMissing)="onContactClientMissing()" />
 
-<p-confirmdialog [style]="{ width: '26rem' }" [breakpoints]="{ '640px': 'calc(100vw - 2rem)' }" />
+<p-confirmdialog #confirmDialog defaultFocus="reject" [style]="{ width: '26rem' }" [breakpoints]="{ '640px': 'calc(100vw - 2rem)' }">
+  <ng-template #footer>
+    @if (confirmDialog.confirmation; as confirmation) {
+      <p-button
+        styleClass="p-confirm-dialog-reject"
+        [label]="confirmation.rejectLabel ?? 'No'"
+        [icon]="confirmationIcon(confirmation.rejectIcon)"
+        [severity]="confirmation.rejectButtonProps?.severity ?? 'secondary'"
+        [outlined]="confirmation.rejectButtonProps?.outlined ?? false"
+        (onClick)="settleConfirmation(confirmDialog, false)"
+      />
+      <p-button
+        styleClass="p-confirm-dialog-accept"
+        [label]="confirmation.acceptLabel ?? 'Yes'"
+        [icon]="confirmationIcon(confirmation.acceptIcon)"
+        [severity]="confirmation.acceptButtonProps?.severity"
+        (onClick)="settleConfirmation(confirmDialog, true)"
+      />
+    }
+  </ng-template>
+</p-confirmdialog>
 <p-toast position="top-right" [breakpoints]="{ '640px': { width: 'calc(100vw - 2rem)', right: '1rem', left: '1rem' } }" />
