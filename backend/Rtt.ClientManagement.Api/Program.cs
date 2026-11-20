@@ -16,6 +16,8 @@ var connectionString = new SqliteConnectionStringBuilder
 
 builder.Services.AddSingleton(new SqliteConnectionFactory(connectionString));
 builder.Services.AddSingleton<ClientDataAccess>();
+builder.Services.AddSingleton<ClientAddressDataAccess>();
+builder.Services.AddSingleton<ClientContactDataAccess>();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
@@ -68,5 +70,7 @@ app.MapGet("/health/database", async (SqliteConnectionFactory connectionFactory,
 });
 
 app.MapClientEndpoints();
+app.MapClientAddressEndpoints();
+app.MapClientContactEndpoints();
 
 app.Run();

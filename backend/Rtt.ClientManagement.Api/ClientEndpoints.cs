@@ -107,9 +107,9 @@ public static class ClientEndpoints
         string? firstName, string? lastName, string? gender, DateOnly? dateOfBirth)
     {
         var errors = new Dictionary<string, string[]>();
-        var trimmedFirstName = ValidateRequiredText(firstName, "firstName", "First name", MaximumNameLength, errors);
-        var trimmedLastName = ValidateRequiredText(lastName, "lastName", "Last name", MaximumNameLength, errors);
-        var trimmedGender = ValidateRequiredText(gender, "gender", "Gender", MaximumGenderLength, errors);
+        var trimmedFirstName = RequestValidation.ValidateRequiredText(firstName, "firstName", "First name", MaximumNameLength, errors);
+        var trimmedLastName = RequestValidation.ValidateRequiredText(lastName, "lastName", "Last name", MaximumNameLength, errors);
+        var trimmedGender = RequestValidation.ValidateRequiredText(gender, "gender", "Gender", MaximumGenderLength, errors);
 
         if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
         {
@@ -119,21 +119,5 @@ public static class ClientEndpoints
         return errors.Count > 0
             ? (null, errors)
             : (new ClientDetails(trimmedFirstName!, trimmedLastName!, trimmedGender!, dateOfBirth), errors);
-    }
-
-    private static string? ValidateRequiredText(string? value, string fieldName, string displayName, int maximumLength, Dictionary<string, string[]> errors)
-    {
-        var trimmedValue = value?.Trim();
-
-        if (string.IsNullOrEmpty(trimmedValue))
-        {
-            errors[fieldName] = [$"{displayName} is required."];
-        }
-        else if (trimmedValue.Length > maximumLength)
-        {
-            errors[fieldName] = [$"{displayName} must be {maximumLength} characters or fewer."];
-        }
-
-        return trimmedValue;
     }
 }

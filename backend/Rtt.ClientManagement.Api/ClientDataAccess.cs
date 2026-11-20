@@ -16,7 +16,7 @@ public sealed class ClientDataAccess(SqliteConnectionFactory connectionFactory)
 
         await using var countCommand = connection.CreateCommand();
         countCommand.CommandText = $"SELECT COUNT(*) FROM Client WHERE {NameSearchCondition};";
-        countCommand.Parameters.AddWithValue("$namePattern", (object?)namePattern ?? DBNull.Value);
+        countCommand.Parameters.AddWithValue("$namePattern", SqliteValues.FromNullable(namePattern));
         var totalCount = Convert.ToInt64(await countCommand.ExecuteScalarAsync(cancellationToken));
 
         var clients = new List<ClientResponse>(pageSize);
@@ -24,7 +24,7 @@ public sealed class ClientDataAccess(SqliteConnectionFactory connectionFactory)
         {
             await using var pageCommand = connection.CreateCommand();
             pageCommand.CommandText = $"SELECT {ClientColumns} FROM Client WHERE {NameSearchCondition} ORDER BY ClientId LIMIT $limit OFFSET $offset;";
-            pageCommand.Parameters.AddWithValue("$namePattern", (object?)namePattern ?? DBNull.Value);
+            pageCommand.Parameters.AddWithValue("$namePattern", SqliteValues.FromNullable(namePattern));
             pageCommand.Parameters.AddWithValue("$limit", pageSize);
             pageCommand.Parameters.AddWithValue("$offset", (long)(page - 1) * pageSize);
 
@@ -90,6 +90,14 @@ public sealed class ClientDataAccess(SqliteConnectionFactory connectionFactory)
         return await command.ExecuteNonQueryAsync(cancellationToken) > 0;
     }
 
+    public static async Task<bool> ClientExistsAsync(SqliteConnection connection, long clientId, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT EXISTS (SELECT 1 FROM Client WHERE ClientId = $clientId);";
+        command.Parameters.AddWithValue("$clientId", clientId);
+        return Convert.ToInt64(await command.ExecuteScalarAsync(cancellationToken)) == 1;
+    }
+
     private static string? CreateNamePattern(string? search)
     {
         if (string.IsNullOrWhiteSpace(search))
@@ -127,9 +135,6 @@ public sealed class ClientDataAccess(SqliteConnectionFactory connectionFactory)
         reader.GetString(2),
         reader.GetString(3),
         reader.IsDBNull(4) ? null : DateOnly.ParseExact(reader.GetString(4), DateOfBirthFormat, CultureInfo.InvariantCulture),
-        ParseUtcTimestamp(reader.GetString(5)),
-        reader.IsDBNull(6) ? null : ParseUtcTimestamp(reader.GetString(6)));
-
-    private static DateTime ParseUtcTimestamp(string value) =>
-        DateTime.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+        SqliteValues.ParseUtcTimestamp(reader.GetString(5)),
+        reader.IsDBNull(6) ? null : SqliteValues.ParseUtcTimestamp(reader.GetString(6)));
 }
