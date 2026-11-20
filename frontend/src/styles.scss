@@ -70,13 +70,17 @@ body {
 }
 
 .actions-column {
-  width: 9.5rem;
+  width: 12rem;
   text-align: right;
 }
 
 .address-actions-column {
   width: 6.5rem;
   text-align: right;
+}
+
+.contact-value {
+  overflow-wrap: anywhere;
 }
 
 .section-title {

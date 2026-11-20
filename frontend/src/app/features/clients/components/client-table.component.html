@@ -44,6 +44,15 @@
             (onClick)="manageAddresses.emit(client)"
           />
           <p-button
+            icon="pi pi-address-book"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            [disabled]="deletingClientId() === client.clientId"
+            [ariaLabel]="'Manage contacts for ' + client.firstName + ' ' + client.lastName"
+            (onClick)="manageContacts.emit(client)"
+          />
+          <p-button
             icon="pi pi-pencil"
             severity="secondary"
             [text]="true"

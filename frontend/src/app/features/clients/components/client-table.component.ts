@@ -22,6 +22,7 @@ export class ClientTableComponent {
   readonly editClient = output<Client>();
   readonly deleteClient = output<Client>();
   readonly manageAddresses = output<Client>();
+  readonly manageContacts = output<Client>();
 
   protected readonly firstRecordIndex = computed(() => (this.page() - 1) * this.pageSize());
 

@@ -1,0 +1,47 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate class="flex flex-column gap-3">
+  <p class="form-note">Fields marked <span aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span> are required.</p>
+
+  <div class="form-field">
+    <label id="contact-type-label" for="contact-type">Contact Type <span aria-hidden="true">*</span></label>
+    <p-select
+      inputId="contact-type"
+      formControlName="contactType"
+      placeholder="Select contact type"
+      appendTo="body"
+      styleClass="w-full"
+      [options]="contactTypeOptions()"
+      [invalid]="showError('contactType')"
+      [ariaLabelledBy]="typeLabelledBy()"
+    />
+    @if (showError('contactType')) {
+      <small id="contact-type-error" class="field-error">
+        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>{{ errorMessage('contactType') }}
+      </small>
+    }
+  </div>
+
+  <div class="form-field">
+    <label for="contact-value">Contact Value <span aria-hidden="true">*</span></label>
+    <input
+      pInputText
+      id="contact-value"
+      formControlName="contactValue"
+      autocomplete="off"
+      class="w-full"
+      aria-required="true"
+      [invalid]="showError('contactValue')"
+      [attr.aria-invalid]="showError('contactValue')"
+      [attr.aria-describedby]="showError('contactValue') ? 'contact-value-error' : null"
+    />
+    @if (showError('contactValue')) {
+      <small id="contact-value-error" class="field-error">
+        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>{{ errorMessage('contactValue') }}
+      </small>
+    }
+  </div>
+
+  <div class="flex flex-wrap justify-content-end gap-2 pt-2">
+    <p-button type="button" label="Cancel" severity="secondary" [text]="true" [disabled]="submitting()" (onClick)="cancelRequested.emit()" />
+    <p-button type="submit" label="Save" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting()" />
+  </div>
+</form>

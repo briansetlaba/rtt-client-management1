@@ -1,0 +1,54 @@
+<p-table
+  [value]="contacts()"
+  dataKey="contactId"
+  [loading]="loading()"
+  [scrollable]="true"
+  [tableStyle]="{ 'min-width': '24rem' }"
+  [stripedRows]="true"
+>
+  <ng-template #header>
+    <tr>
+      <th scope="col">Type</th>
+      <th scope="col">Contact Detail</th>
+      <th scope="col" class="address-actions-column"><span class="visually-hidden">Actions</span></th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-contact>
+    <tr>
+      <td>{{ contact.contactType }}</td>
+      <td class="contact-value">{{ contact.contactValue }}</td>
+      <td class="address-actions-column">
+        <div class="row-actions">
+          <p-button
+            icon="pi pi-pencil"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            [disabled]="deletingContactId() === contact.contactId"
+            [ariaLabel]="actionLabel('Edit', contact)"
+            (onClick)="editContact.emit(contact)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [loading]="deletingContactId() === contact.contactId"
+            [disabled]="deletingContactId() !== null"
+            [ariaLabel]="actionLabel('Delete', contact)"
+            (onClick)="deleteContact.emit(contact)"
+          />
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr>
+      <td colspan="3" class="text-center text-muted py-5">
+        @if (!loading()) {
+          No contact details have been added for this client.
+        }
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

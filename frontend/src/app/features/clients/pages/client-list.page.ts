@@ -15,6 +15,7 @@ import { Subject, catchError, debounceTime, filter, map, of, switchMap, tap } fr
 import { isServiceUnreachable, readValidationProblem } from '../../../core/http/http-errors';
 import { ClientsApiService } from '../../../core/services/clients-api.service';
 import { ClientAddressesPanelComponent } from '../components/client-addresses-panel.component';
+import { ClientContactsPanelComponent } from '../components/client-contacts-panel.component';
 import { ClientFormComponent } from '../components/client-form.component';
 import { ClientTableComponent } from '../components/client-table.component';
 import {
@@ -41,6 +42,7 @@ interface ClientLoadResult {
   selector: 'app-client-list-page',
   imports: [
     ClientAddressesPanelComponent,
+    ClientContactsPanelComponent,
     ClientFormComponent,
     ClientTableComponent,
     ButtonModule,
@@ -83,6 +85,7 @@ export class ClientListPage {
   protected readonly dialogErrorMessage = signal<string | null>(null);
   protected readonly deletingClientId = signal<number | null>(null);
   protected readonly addressClient = signal<Client | null>(null);
+  protected readonly contactClient = signal<Client | null>(null);
 
   protected readonly dialogTitle = computed(() => (this.editingClient() ? 'Edit Client' : 'Add Client'));
 
@@ -188,7 +191,22 @@ export class ClientListPage {
   }
 
   protected openAddresses(client: Client): void {
+    this.contactClient.set(null);
     this.addressClient.set(client);
+  }
+
+  protected openContacts(client: Client): void {
+    this.addressClient.set(null);
+    this.contactClient.set(client);
+  }
+
+  protected closeContacts(): void {
+    this.contactClient.set(null);
+  }
+
+  protected onContactClientMissing(): void {
+    this.closeContacts();
+    this.reportMissingClient();
   }
 
   protected closeAddresses(): void {
@@ -197,6 +215,10 @@ export class ClientListPage {
 
   protected onAddressClientMissing(): void {
     this.closeAddresses();
+    this.reportMissingClient();
+  }
+
+  private reportMissingClient(): void {
     this.messageService.add({ severity: 'error', summary: 'This client no longer exists. The client list has been refreshed.' });
     this.refreshClients();
   }
