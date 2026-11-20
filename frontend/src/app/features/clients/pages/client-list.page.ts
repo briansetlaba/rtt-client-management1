@@ -12,7 +12,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { Subject, catchError, debounceTime, filter, map, of, switchMap, tap } from 'rxjs';
+import { isServiceUnreachable, readValidationProblem } from '../../../core/http/http-errors';
 import { ClientsApiService } from '../../../core/services/clients-api.service';
+import { ClientAddressesPanelComponent } from '../components/client-addresses-panel.component';
 import { ClientFormComponent } from '../components/client-form.component';
 import { ClientTableComponent } from '../components/client-table.component';
 import {
@@ -28,7 +30,6 @@ import {
 const searchDebounceMilliseconds = 300;
 const maximumSearchLength = 100;
 const defaultPageSize = 20;
-const unreachableServiceStatuses = [0, 502, 503, 504];
 const clientFormFields: ClientFormField[] = ['firstName', 'lastName', 'gender', 'dateOfBirth'];
 
 interface ClientLoadResult {
@@ -39,6 +40,7 @@ interface ClientLoadResult {
 @Component({
   selector: 'app-client-list-page',
   imports: [
+    ClientAddressesPanelComponent,
     ClientFormComponent,
     ClientTableComponent,
     ButtonModule,
@@ -80,6 +82,7 @@ export class ClientListPage {
   protected readonly serverFieldErrors = signal<ClientFormFieldErrors>({});
   protected readonly dialogErrorMessage = signal<string | null>(null);
   protected readonly deletingClientId = signal<number | null>(null);
+  protected readonly addressClient = signal<Client | null>(null);
 
   protected readonly dialogTitle = computed(() => (this.editingClient() ? 'Edit Client' : 'Add Client'));
 
@@ -184,6 +187,20 @@ export class ClientListPage {
     });
   }
 
+  protected openAddresses(client: Client): void {
+    this.addressClient.set(client);
+  }
+
+  protected closeAddresses(): void {
+    this.addressClient.set(null);
+  }
+
+  protected onAddressClientMissing(): void {
+    this.closeAddresses();
+    this.messageService.add({ severity: 'error', summary: 'This client no longer exists. The client list has been refreshed.' });
+    this.refreshClients();
+  }
+
   protected requestClientDeletion(client: Client): void {
     if (this.deletingClientId() !== null) {
       return;
@@ -276,7 +293,7 @@ export class ClientListPage {
     }
 
     if (error instanceof HttpErrorResponse && error.status === 400) {
-      const { fieldErrors, otherMessages } = readValidationProblem(error.error);
+      const { fieldErrors, otherMessages } = readValidationProblem(error.error, clientFormFields);
       this.serverFieldErrors.set(fieldErrors);
       this.dialogErrorMessage.set(
         otherMessages.length > 0
@@ -289,7 +306,7 @@ export class ClientListPage {
     }
 
     this.dialogErrorMessage.set(
-      error instanceof HttpErrorResponse && unreachableServiceStatuses.includes(error.status)
+      isServiceUnreachable(error)
         ? 'The client service could not be reached. Your changes have not been saved. Please try again.'
         : 'The client could not be saved. Please try again.'
     );
@@ -335,7 +352,7 @@ function normalizeSearch(value: string): string {
 }
 
 function describeLoadError(error: unknown): string {
-  if (error instanceof HttpErrorResponse && unreachableServiceStatuses.includes(error.status)) {
+  if (isServiceUnreachable(error)) {
     return 'The client service could not be reached. Check that the API is running, then retry.';
   }
 
@@ -347,7 +364,7 @@ function describeLoadError(error: unknown): string {
 }
 
 function describeDeletionError(error: unknown): string {
-  if (error instanceof HttpErrorResponse && unreachableServiceStatuses.includes(error.status)) {
+  if (isServiceUnreachable(error)) {
     return 'Unable to connect to the server. Please try again.';
   }
 
@@ -356,31 +373,4 @@ function describeDeletionError(error: unknown): string {
   }
 
   return 'Client could not be deleted. Please try again.';
-}
-
-function readValidationProblem(body: unknown): { fieldErrors: ClientFormFieldErrors; otherMessages: string[] } {
-  const fieldErrors: ClientFormFieldErrors = {};
-  const otherMessages: string[] = [];
-  const errors = typeof body === 'object' && body !== null && 'errors' in body ? body.errors : null;
-
-  if (typeof errors !== 'object' || errors === null) {
-    return { fieldErrors, otherMessages };
-  }
-
-  for (const [key, messages] of Object.entries(errors)) {
-    const message = Array.isArray(messages) ? messages.filter(item => typeof item === 'string').join(' ') : '';
-    const field = clientFormFields.find(candidate => candidate.toLowerCase() === key.toLowerCase());
-
-    if (!message) {
-      continue;
-    }
-
-    if (field) {
-      fieldErrors[field] = message;
-    } else {
-      otherMessages.push(message);
-    }
-  }
-
-  return { fieldErrors, otherMessages };
 }

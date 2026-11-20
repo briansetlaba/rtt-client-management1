@@ -1,0 +1,60 @@
+<p-table
+  [value]="addresses()"
+  dataKey="addressId"
+  [loading]="loading()"
+  [scrollable]="true"
+  [tableStyle]="{ 'min-width': '42rem' }"
+  [stripedRows]="true"
+>
+  <ng-template #header>
+    <tr>
+      <th scope="col">Type</th>
+      <th scope="col">Address</th>
+      <th scope="col">City</th>
+      <th scope="col">Province</th>
+      <th scope="col">Postal Code</th>
+      <th scope="col" class="address-actions-column"><span class="visually-hidden">Actions</span></th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-address>
+    <tr>
+      <td>{{ address.addressType }}</td>
+      <td>{{ addressLines(address) }}</td>
+      <td>{{ address.city }}</td>
+      <td>{{ address.province ?? '—' }}</td>
+      <td>{{ address.postalCode ?? '—' }}</td>
+      <td class="address-actions-column">
+        <div class="row-actions">
+          <p-button
+            icon="pi pi-pencil"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            [disabled]="deletingAddressId() === address.addressId"
+            [ariaLabel]="actionLabel('Edit', address)"
+            (onClick)="editAddress.emit(address)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [loading]="deletingAddressId() === address.addressId"
+            [disabled]="deletingAddressId() !== null"
+            [ariaLabel]="actionLabel('Delete', address)"
+            (onClick)="deleteAddress.emit(address)"
+          />
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template #emptymessage>
+    <tr>
+      <td colspan="6" class="text-center text-muted py-5">
+        @if (!loading()) {
+          No addresses have been added for this client.
+        }
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

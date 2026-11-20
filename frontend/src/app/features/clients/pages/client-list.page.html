@@ -49,6 +49,7 @@
       [deletingClientId]="deletingClientId()"
       (editClient)="openEditDialog($event)"
       (deleteClient)="requestClientDeletion($event)"
+      (manageAddresses)="openAddresses($event)"
     />
   </div>
 </section>
@@ -80,6 +81,8 @@
     </div>
   }
 </p-dialog>
+
+<app-client-addresses-panel [client]="addressClient()" (closed)="closeAddresses()" (clientMissing)="onAddressClientMissing()" />
 
 <p-confirmdialog [style]="{ width: '26rem' }" [breakpoints]="{ '640px': 'calc(100vw - 2rem)' }" />
 <p-toast position="top-right" [breakpoints]="{ '640px': { width: 'calc(100vw - 2rem)', right: '1rem', left: '1rem' } }" />

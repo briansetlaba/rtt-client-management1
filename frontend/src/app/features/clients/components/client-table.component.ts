@@ -21,6 +21,7 @@ export class ClientTableComponent {
   readonly pageChange = output<ClientPageChange>();
   readonly editClient = output<Client>();
   readonly deleteClient = output<Client>();
+  readonly manageAddresses = output<Client>();
 
   protected readonly firstRecordIndex = computed(() => (this.page() - 1) * this.pageSize());
 

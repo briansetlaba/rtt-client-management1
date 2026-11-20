@@ -70,8 +70,19 @@ body {
 }
 
 .actions-column {
+  width: 9.5rem;
+  text-align: right;
+}
+
+.address-actions-column {
   width: 6.5rem;
   text-align: right;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
 }
 
 .row-actions {

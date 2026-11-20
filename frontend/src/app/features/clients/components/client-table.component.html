@@ -35,6 +35,15 @@
       <td class="actions-column">
         <div class="row-actions">
           <p-button
+            icon="pi pi-map-marker"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            [disabled]="deletingClientId() === client.clientId"
+            [ariaLabel]="'Manage addresses for ' + client.firstName + ' ' + client.lastName"
+            (onClick)="manageAddresses.emit(client)"
+          />
+          <p-button
             icon="pi pi-pencil"
             severity="secondary"
             [text]="true"

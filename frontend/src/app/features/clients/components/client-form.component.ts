@@ -1,11 +1,12 @@
 import { ChangeDetectorRef, Component, OnInit, computed, effect, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { distinctUntilChanged, map } from 'rxjs';
+import { requiredTrimmedText } from '../forms/text-validators';
 import { Client, ClientFormField, ClientFormFieldErrors, ClientSaveRequest } from '../models/client.model';
 
 export const standardGenderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
@@ -41,9 +42,9 @@ export class ClientFormComponent implements OnInit {
   protected readonly today = startOfToday();
 
   protected readonly form = inject(NonNullableFormBuilder).group({
-    firstName: ['', trimmedTextValidator(maximumNameLength)],
-    lastName: ['', trimmedTextValidator(maximumNameLength)],
-    gender: ['', trimmedTextValidator(maximumGenderLength)],
+    firstName: ['', requiredTrimmedText(maximumNameLength)],
+    lastName: ['', requiredTrimmedText(maximumNameLength)],
+    gender: ['', requiredTrimmedText(maximumGenderLength)],
     dateOfBirth: [null as Date | null, notInFutureValidator]
   });
 
@@ -185,18 +186,6 @@ export function parseTypedDate(text: string): Date | null {
 function startOfToday(): Date {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function trimmedTextValidator(maximumLength: number): ValidatorFn {
-  return (control: AbstractControl<string>): ValidationErrors | null => {
-    const length = control.value.trim().length;
-
-    if (length === 0) {
-      return { required: true };
-    }
-
-    return length > maximumLength ? { maxlength: { requiredLength: maximumLength, actualLength: length } } : null;
-  };
 }
 
 function notInFutureValidator(control: AbstractControl<Date | null>): ValidationErrors | null {

@@ -1,0 +1,54 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate class="flex flex-column gap-3">
+  <p class="form-note">Fields marked <span aria-hidden="true">*</span><span class="visually-hidden">with an asterisk</span> are required.</p>
+
+  <div class="form-field">
+    <label id="address-type-label" for="address-type">Address Type <span aria-hidden="true">*</span></label>
+    <p-select
+      inputId="address-type"
+      formControlName="addressType"
+      placeholder="Select address type"
+      appendTo="body"
+      styleClass="w-full"
+      [options]="addressTypeOptions()"
+      [invalid]="showError('addressType')"
+      [ariaLabelledBy]="typeLabelledBy()"
+    />
+    @if (showError('addressType')) {
+      <small id="address-type-error" class="field-error">
+        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>{{ errorMessage('addressType') }}
+      </small>
+    }
+  </div>
+
+  @for (field of textFields; track field.name) {
+    <div class="form-field">
+      <label [for]="field.id">
+        {{ field.label }}
+        @if (field.required) {
+          <span aria-hidden="true">*</span>
+        }
+      </label>
+      <input
+        pInputText
+        class="w-full"
+        [id]="field.id"
+        [formControlName]="field.name"
+        [autocomplete]="field.autocomplete"
+        [attr.aria-required]="field.required"
+        [invalid]="showError(field.name)"
+        [attr.aria-invalid]="showError(field.name)"
+        [attr.aria-describedby]="showError(field.name) ? field.id + '-error' : null"
+      />
+      @if (showError(field.name)) {
+        <small class="field-error" [id]="field.id + '-error'">
+          <i class="pi pi-exclamation-circle" aria-hidden="true"></i>{{ errorMessage(field.name) }}
+        </small>
+      }
+    </div>
+  }
+
+  <div class="flex flex-wrap justify-content-end gap-2 pt-2">
+    <p-button type="button" label="Cancel" severity="secondary" [text]="true" [disabled]="submitting()" (onClick)="cancelRequested.emit()" />
+    <p-button type="submit" label="Save" icon="pi pi-check" [loading]="submitting()" [disabled]="submitting()" />
+  </div>
+</form>
