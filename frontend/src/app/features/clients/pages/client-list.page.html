@@ -46,7 +46,9 @@
       [pageSizeOptions]="pageSizeOptions"
       [emptyMessage]="emptyMessage()"
       (pageChange)="onPageChange($event)"
+      [deletingClientId]="deletingClientId()"
       (editClient)="openEditDialog($event)"
+      (deleteClient)="requestClientDeletion($event)"
     />
   </div>
 </section>

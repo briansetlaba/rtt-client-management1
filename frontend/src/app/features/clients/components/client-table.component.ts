@@ -16,9 +16,11 @@ export class ClientTableComponent {
   readonly pageSize = input.required<number>();
   readonly pageSizeOptions = input.required<number[]>();
   readonly emptyMessage = input.required<string>();
+  readonly deletingClientId = input<number | null>(null);
 
   readonly pageChange = output<ClientPageChange>();
   readonly editClient = output<Client>();
+  readonly deleteClient = output<Client>();
 
   protected readonly firstRecordIndex = computed(() => (this.page() - 1) * this.pageSize());
 

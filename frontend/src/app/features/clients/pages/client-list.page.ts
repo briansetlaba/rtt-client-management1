@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -58,6 +59,7 @@ export class ClientListPage {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
   private readonly searchInputs = new Subject<string>();
   private readonly queryRequests = new Subject<ClientListQuery>();
   private readonly formHasUnsavedChanges = signal(false);
@@ -77,6 +79,7 @@ export class ClientListPage {
   protected readonly submitting = signal(false);
   protected readonly serverFieldErrors = signal<ClientFormFieldErrors>({});
   protected readonly dialogErrorMessage = signal<string | null>(null);
+  protected readonly deletingClientId = signal<number | null>(null);
 
   protected readonly dialogTitle = computed(() => (this.editingClient() ? 'Edit Client' : 'Add Client'));
 
@@ -181,6 +184,67 @@ export class ClientListPage {
     });
   }
 
+  protected requestClientDeletion(client: Client): void {
+    if (this.deletingClientId() !== null) {
+      return;
+    }
+
+    const clientName = `${client.firstName} ${client.lastName}`;
+    const initiatingElement = this.document.activeElement instanceof HTMLElement ? this.document.activeElement : null;
+    const returnFocus = () => setTimeout(() => initiatingElement?.isConnected && initiatingElement.focus());
+
+    this.confirmationService.confirm({
+      header: 'Delete Client',
+      message: `Are you sure you want to delete ${clientName}? This will permanently delete the client and all associated addresses and contact details.`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete Client',
+      rejectLabel: 'Cancel',
+      acceptIcon: 'pi pi-trash',
+      rejectIcon: 'none',
+      acceptButtonProps: { severity: 'danger' },
+      rejectButtonProps: { severity: 'secondary', outlined: true },
+      defaultFocus: 'reject',
+      closeOnEscape: true,
+      accept: () => {
+        returnFocus();
+        this.deleteClient(client);
+      },
+      reject: () => returnFocus()
+    });
+  }
+
+  private deleteClient(client: Client): void {
+    if (this.deletingClientId() !== null) {
+      return;
+    }
+
+    this.deletingClientId.set(client.clientId);
+
+    this.clientsApi
+      .deleteClient(client.clientId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.deletingClientId.set(null);
+          this.messageService.add({ severity: 'success', summary: 'Client deleted successfully.' });
+          this.refreshClients();
+        },
+        error: (error: unknown) => this.failDeletion(error)
+      });
+  }
+
+  private failDeletion(error: unknown): void {
+    this.deletingClientId.set(null);
+
+    if (error instanceof HttpErrorResponse && error.status === 404) {
+      this.messageService.add({ severity: 'error', summary: 'This client no longer exists. The list has been refreshed.' });
+      this.refreshClients();
+      return;
+    }
+
+    this.messageService.add({ severity: 'error', summary: describeDeletionError(error) });
+  }
+
   private openDialog(client: Client | null): void {
     this.editingClient.set(client);
     this.serverFieldErrors.set({});
@@ -252,8 +316,10 @@ export class ClientListPage {
   private completeLoading(result: ClientLoadResult): void {
     const response = result.response;
 
-    if (response && response.items.length === 0 && response.totalPages > 0 && response.page > response.totalPages) {
-      this.queryRequests.next({ ...this.query(), page: response.totalPages });
+    const lastAvailablePage = Math.max(response?.totalPages ?? 1, 1);
+
+    if (response && response.items.length === 0 && response.page > lastAvailablePage) {
+      this.queryRequests.next({ ...this.query(), page: lastAvailablePage });
       return;
     }
 
@@ -278,6 +344,18 @@ function describeLoadError(error: unknown): string {
   }
 
   return 'Clients could not be loaded. Please retry.';
+}
+
+function describeDeletionError(error: unknown): string {
+  if (error instanceof HttpErrorResponse && unreachableServiceStatuses.includes(error.status)) {
+    return 'Unable to connect to the server. Please try again.';
+  }
+
+  if (error instanceof HttpErrorResponse && error.status === 400) {
+    return 'The delete request was not valid. Please refresh the list and try again.';
+  }
+
+  return 'Client could not be deleted. Please try again.';
 }
 
 function readValidationProblem(body: unknown): { fieldErrors: ClientFormFieldErrors; otherMessages: string[] } {

@@ -33,14 +33,27 @@
       <td>{{ client.gender }}</td>
       <td>{{ client.dateOfBirth ?? '—' }}</td>
       <td class="actions-column">
-        <p-button
-          icon="pi pi-pencil"
-          severity="secondary"
-          [text]="true"
-          [rounded]="true"
-          [ariaLabel]="'Edit client ' + client.firstName + ' ' + client.lastName"
-          (onClick)="editClient.emit(client)"
-        />
+        <div class="row-actions">
+          <p-button
+            icon="pi pi-pencil"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            [disabled]="deletingClientId() === client.clientId"
+            [ariaLabel]="'Edit client ' + client.firstName + ' ' + client.lastName"
+            (onClick)="editClient.emit(client)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [loading]="deletingClientId() === client.clientId"
+            [disabled]="deletingClientId() !== null"
+            [ariaLabel]="'Delete client ' + client.firstName + ' ' + client.lastName"
+            (onClick)="deleteClient.emit(client)"
+          />
+        </div>
       </td>
     </tr>
   </ng-template>

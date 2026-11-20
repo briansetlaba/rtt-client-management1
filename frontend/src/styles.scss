@@ -70,8 +70,15 @@ body {
 }
 
 .actions-column {
-  width: 4rem;
+  width: 6.5rem;
   text-align: right;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  white-space: nowrap;
 }
 
 .visually-hidden {

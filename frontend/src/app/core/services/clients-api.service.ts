@@ -26,4 +26,8 @@ export class ClientsApiService {
   updateClient(clientId: number, request: ClientSaveRequest): Observable<Client> {
     return this.http.put<Client>(`${clientsUrl}/${clientId}`, request);
   }
+
+  deleteClient(clientId: number): Observable<void> {
+    return this.http.delete<void>(`${clientsUrl}/${clientId}`);
+  }
 }
