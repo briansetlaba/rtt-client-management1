@@ -1,10 +1,11 @@
 import { Component, computed, input, output } from '@angular/core';
+import { ButtonModule } from 'primeng/button';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { Client, ClientPageChange } from '../models/client.model';
 
 @Component({
   selector: 'app-client-table',
-  imports: [TableModule],
+  imports: [ButtonModule, TableModule],
   templateUrl: './client-table.component.html'
 })
 export class ClientTableComponent {
@@ -17,6 +18,7 @@ export class ClientTableComponent {
   readonly emptyMessage = input.required<string>();
 
   readonly pageChange = output<ClientPageChange>();
+  readonly editClient = output<Client>();
 
   protected readonly firstRecordIndex = computed(() => (this.page() - 1) * this.pageSize());
 

@@ -22,6 +22,7 @@
       <th scope="col">Last Name</th>
       <th scope="col">Gender</th>
       <th scope="col">Date of Birth</th>
+      <th scope="col" class="actions-column"><span class="visually-hidden">Actions</span></th>
     </tr>
   </ng-template>
   <ng-template #body let-client>
@@ -31,11 +32,21 @@
       <td>{{ client.lastName }}</td>
       <td>{{ client.gender }}</td>
       <td>{{ client.dateOfBirth ?? '—' }}</td>
+      <td class="actions-column">
+        <p-button
+          icon="pi pi-pencil"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          [ariaLabel]="'Edit client ' + client.firstName + ' ' + client.lastName"
+          (onClick)="editClient.emit(client)"
+        />
+      </td>
     </tr>
   </ng-template>
   <ng-template #emptymessage>
     <tr>
-      <td colspan="5" class="text-center text-muted py-5">
+      <td colspan="6" class="text-center text-muted py-5">
         @if (!loading()) {
           {{ emptyMessage() }}
         }

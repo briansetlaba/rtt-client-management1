@@ -26,3 +26,14 @@ export interface ClientPageChange {
   page: number;
   pageSize: number;
 }
+
+export interface ClientSaveRequest {
+  firstName: string;
+  lastName: string;
+  gender: string;
+  dateOfBirth: string | null;
+}
+
+export type ClientFormField = keyof ClientSaveRequest;
+
+export type ClientFormFieldErrors = Partial<Record<ClientFormField, string>>;

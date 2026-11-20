@@ -1,7 +1,10 @@
 <section class="flex flex-column gap-4" aria-labelledby="clients-heading">
-  <header>
-    <h1 id="clients-heading" class="page-title">Clients</h1>
-    <p class="page-description">Manage and search client records.</p>
+  <header class="flex flex-wrap align-items-center justify-content-between gap-3">
+    <div>
+      <h1 id="clients-heading" class="page-title">Clients</h1>
+      <p class="page-description">Manage and search client records.</p>
+    </div>
+    <p-button label="Add Client" icon="pi pi-plus" (onClick)="openCreateDialog()" />
   </header>
 
   <div class="content-panel flex flex-column gap-3">
@@ -43,6 +46,38 @@
       [pageSizeOptions]="pageSizeOptions"
       [emptyMessage]="emptyMessage()"
       (pageChange)="onPageChange($event)"
+      (editClient)="openEditDialog($event)"
     />
   </div>
 </section>
+
+<p-dialog
+  [header]="dialogTitle()"
+  [visible]="dialogVisible()"
+  [modal]="true"
+  [closable]="false"
+  [closeOnEscape]="false"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '32rem' }"
+  [breakpoints]="{ '640px': 'calc(100vw - 2rem)' }"
+>
+  @if (dialogVisible()) {
+    <div class="flex flex-column gap-3" (keydown.escape)="requestDialogClose()">
+      @if (dialogErrorMessage(); as message) {
+        <p-message severity="error" styleClass="w-full">{{ message }}</p-message>
+      }
+      <app-client-form
+        [client]="editingClient()"
+        [submitting]="submitting()"
+        [serverErrors]="serverFieldErrors()"
+        (saveRequested)="saveClient($event)"
+        (cancelRequested)="requestDialogClose()"
+        (dirtyChange)="onFormDirtyChange($event)"
+      />
+    </div>
+  }
+</p-dialog>
+
+<p-confirmdialog [style]="{ width: '26rem' }" [breakpoints]="{ '640px': 'calc(100vw - 2rem)' }" />
+<p-toast position="top-right" [breakpoints]="{ '640px': { width: 'calc(100vw - 2rem)', right: '1rem', left: '1rem' } }" />
