@@ -15,8 +15,13 @@ var connectionString = new SqliteConnectionStringBuilder
 }.ToString();
 
 builder.Services.AddSingleton(new SqliteConnectionFactory(connectionString));
+builder.Services.AddSingleton<ClientDataAccess>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 if (!File.Exists(databasePath))
 {
@@ -61,5 +66,7 @@ app.MapGet("/health/database", async (SqliteConnectionFactory connectionFactory,
         return unavailableResponse;
     }
 });
+
+app.MapClientEndpoints();
 
 app.Run();
