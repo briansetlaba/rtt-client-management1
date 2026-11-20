@@ -1,0 +1,16 @@
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.page-description {
+  margin: 0.25rem 0 0;
+  color: var(--p-text-muted-color);
+}
+
+.search-field {
+  flex: 1 1 18rem;
+  max-width: 28rem;
+}

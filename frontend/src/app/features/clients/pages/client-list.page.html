@@ -1,0 +1,48 @@
+<section class="flex flex-column gap-4" aria-labelledby="clients-heading">
+  <header>
+    <h1 id="clients-heading" class="page-title">Clients</h1>
+    <p class="page-description">Manage and search client records.</p>
+  </header>
+
+  <div class="content-panel flex flex-column gap-3">
+    <div class="flex flex-wrap align-items-center gap-2">
+      <p-iconfield class="search-field">
+        <p-inputicon class="pi pi-search" />
+        <input
+          #searchBox
+          pInputText
+          type="text"
+          class="w-full"
+          placeholder="Search by first or last name"
+          aria-label="Search clients by first or last name"
+          [maxLength]="maximumSearchLength"
+          [value]="searchText()"
+          (input)="onSearchInput(searchBox.value)"
+        />
+      </p-iconfield>
+      @if (searchText()) {
+        <p-button label="Clear" icon="pi pi-times" severity="secondary" [text]="true" (onClick)="clearSearch()" />
+      }
+    </div>
+
+    @if (errorMessage(); as message) {
+      <p-message severity="error" styleClass="w-full">
+        <div class="flex flex-wrap align-items-center justify-content-between gap-3 w-full">
+          <span class="error-text">{{ message }}</span>
+          <p-button label="Retry" icon="pi pi-refresh" severity="danger" [outlined]="true" size="small" (onClick)="retry()" />
+        </div>
+      </p-message>
+    }
+
+    <app-client-table
+      [clients]="clients()"
+      [totalRecords]="totalRecords()"
+      [loading]="loading()"
+      [page]="query().page"
+      [pageSize]="query().pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [emptyMessage]="emptyMessage()"
+      (pageChange)="onPageChange($event)"
+    />
+  </div>
+</section>
