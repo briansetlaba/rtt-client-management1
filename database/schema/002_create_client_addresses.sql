@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS ClientAddress (
+    AddressId INTEGER PRIMARY KEY AUTOINCREMENT,
+    ClientId INTEGER NOT NULL,
+    AddressType TEXT NOT NULL,
+    AddressLine1 TEXT NOT NULL,
+    AddressLine2 TEXT NULL,
+    City TEXT NOT NULL,
+    Province TEXT NULL,
+    PostalCode TEXT NULL,
+    CreatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ClientId) REFERENCES Client (ClientId) ON DELETE CASCADE
+);
