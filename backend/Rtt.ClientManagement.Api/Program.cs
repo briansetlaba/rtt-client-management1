@@ -18,7 +18,9 @@ builder.Services.AddSingleton(new SqliteConnectionFactory(connectionString));
 builder.Services.AddSingleton<ClientDataAccess>();
 builder.Services.AddSingleton<ClientAddressDataAccess>();
 builder.Services.AddSingleton<ClientContactDataAccess>();
+builder.Services.AddSingleton<ClientExportDataAccess>();
 builder.Services.AddProblemDetails();
+builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = false);
 
 var app = builder.Build();
 
@@ -69,6 +71,7 @@ app.MapGet("/health/database", async (SqliteConnectionFactory connectionFactory,
     }
 });
 
+app.MapClientExportEndpoints();
 app.MapClientEndpoints();
 app.MapClientAddressEndpoints();
 app.MapClientContactEndpoints();
